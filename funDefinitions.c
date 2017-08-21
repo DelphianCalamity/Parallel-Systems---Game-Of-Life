@@ -169,7 +169,7 @@ void nextGenerationInsideCells(char *fromGrid, char *toGrid, int x, int offset){
 /**************************************************************************
 	.nextGenerationOutsideCells
 ****************************************************************************/
-void nextGenerationOutsideCells(char *grid, int offset, ){
+void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x, int offset){
 /*
 	int ix, iy;
 	for (ix = start; ix <= end; ix++) 

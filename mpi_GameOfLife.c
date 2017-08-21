@@ -83,10 +83,13 @@ int main(int argc, char **argv)
 	*/
 
 		//Each worker initializes its own subgrid randomly
-		char *myGrids = malloc(2*numOfworkers*sizeof(char));
-		for(i=0; i<numOfworkers; i++){
-			myGrids[i] = (rand()%2 == 0)?'f':'t';
-		}
+		
+		char **myGrids = malloc(2*sizeof(char*));
+		for(i=0; i<2; i++)
+			myGrids[i] = malloc(numOfworkers*sizeof(char));	
+
+		for(i=0; i<numOfworkers; i++)
+			myGrids[0][i] = (rand()%2 == 0)?'f':'t';
 	
 		Neighborhood neighbors;
 
@@ -116,15 +119,28 @@ int main(int argc, char **argv)
     MPI_Type_create_subarray(1, array_sizes, array_subsizes, array_start, MPI_ORDER_C, MPI_CHAR, &rightCol);
     MPI_Type_commit(&rightCol);
 
+		MPI_Request **requests = malloc(2*sizeof(MPI_Request*));
+		for(i=0; i<2; i++)
+			requests[i] = malloc(8*sizeof(MPI_Request));	
 
+    //Create a persistent send request
+    for(i=0; i<2; i++){
+	    MPI_Send_init(myGrids[i], sqrtWorkers, leftCol, neighbors.west, TAG, cartesianComm, &requests[i][0]);				//Send Left Column
+	    MPI_Send_init(myGrids[i], sqrtWorkers, rightCol, neighbors.east, TAG, cartesianComm, &requests[i][1]);			//Send Right Column
+	    
+	    MPI_Send_init(myGrids[i], sqrtWorkers, MPI_CHAR, neighbors.north, TAG, cartesianComm, &requests[i][2]);			//Send Up Line
+	    MPI_Send_init(myGrids[i]+(sqrtWorkers*(sqrtWorkers-1)), sqrtWorkers, MPI_CHAR, neighbors.south, TAG, cartesianComm, &requests[i][3]);								//Send Down Line
+	    
+	    MPI_Send_init(myGrids[i], 1, MPI_CHAR, neighbors.northwest, TAG, cartesianComm, &requests[i][4]);																									//Send northWest
+	    MPI_Send_init(myGrids[i]+sqrtWorkers-1, 1, MPI_CHAR, neighbors.northeast, TAG, cartesianComm, &requests[i][5]);																		//Send northEast
+	    MPI_Send_init(myGrids[i]+(sqrtWorkers*(sqrtWorkers-1)), 1, MPI_CHAR, neighbors.southwest, TAG, cartesianComm, &requests[i][6]);											//Send southWest
+	    MPI_Send_init(myGrids[i]+(sqrtWorkers*(sqrtWorkers-1)+(sqrtWorkers-1)), 1, MPI_CHAR, neighbors.southeast, TAG, cartesianComm, &requests[i][7]);			//Send southEEast
+	}
 
-
-
-
-
-
-
-
+/*
+		for(i=0; i<2; i++) 
+ 			MPI_Request_free(requests[i]);
+*/
 		MPI_Comm_free(&cartesianComm);
 
 	}

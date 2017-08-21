@@ -16,8 +16,8 @@ void validateInput(int numOfWorkers){
 	//Plus 1 task -> MASTER
 
 	int sqrtWorkers = sqrt(numOfWorkers);
-  	if ((numOfWorkers > MAXWORKER) || (numOfWorkers < MINWORKER) || sqrtWorkers*sqrtWorkers != numOfWorkers  || XDIMENSION % sqrtWorkers != 0) {
-    	printf("\n\n ERROR: The number of tasks must be between %d and %d.\n 	number of WORKERS must be a square number whose square root perfectly divides %d.\n	Total #tasks must be #workers+1.\n", MINWORKER+1,MAXWORKER, XDIMENSION);
+  	if ((numOfWorkers > MAXWORKER) || (numOfWorkers < MINWORKER) || sqrtWorkers*sqrtWorkers != numOfWorkers  || XDIMENSION%sqrtWorkers != 0) {
+    	printf("\n\n ERROR: The number of tasks must be between %d and %d.\n 	number of WORKERS must be a square number whose square root is perfectly divided by %d.\n	Total #tasks must be #workers+1.\n", MINWORKER+1,MAXWORKER, XDIMENSION);
     	printf(" Quitting...\n\n");
 	    MPI_Abort(MPI_COMM_WORLD, 0);
 	    exit(1);
@@ -126,7 +126,7 @@ void getRestNeighbors(MPI_Comm cartesianComm, int *myCoords, int sqrtWorkers, Ne
 /**************************************************************************
 	.nextGenerationInsideCells
 ****************************************************************************/
-void nextGenerationInsideCells(char *fromGrid, char *toGrid, int x, int offset){
+void nextGenerationInsideCells(char *fromGrid, char *toGrid, int x){
 
 	/*Determine which of the cells from fromGrid array survive and which don't  according to the 
 	 game of life rules. The image of the new generation will be stored in toGrid array
@@ -155,6 +155,11 @@ void nextGenerationInsideCells(char *fromGrid, char *toGrid, int x, int offset){
 	so when you want to access the element in position (2,3) you must 
 	refer to it as : 2*x + 3*x  where x is the X and Y dimension-size (matrix is square).
 
+	Use these definitions maybe :
+		#define ALIVE		't'
+		#define DEAD 		'f'
+
+
 */	int i,j;
 
 	for(i=1; i<x-1; i++){
@@ -162,20 +167,15 @@ void nextGenerationInsideCells(char *fromGrid, char *toGrid, int x, int offset){
 
 		}
 	}
-
 }
 
 
 /**************************************************************************
 	.nextGenerationOutsideCells
 ****************************************************************************/
-void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x, int offset){
-/*
-	int ix, iy;
-	for (ix = start; ix <= end; ix++) 
-	  for (iy = 1; iy <= ny-2; iy++) 
-	     *(u2+ix*ny+iy) = *(u1+ix*ny+iy)  + parms.cx * (*(u1+(ix+1)*ny+iy) + *(u1+(ix-1)*ny+iy) - 2.0 * *(u1+ix*ny+iy)) + parms.cy * (*(u1+ix*ny+iy+1) + *(u1+ix*ny+iy-1) - 2.0 * *(u1+ix*ny+iy));
-*/
+void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x){
+
+	/*	EYAGGELIA */
 }
 
 

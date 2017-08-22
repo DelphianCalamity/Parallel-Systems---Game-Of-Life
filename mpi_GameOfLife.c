@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include <time.h>
 
@@ -9,9 +10,7 @@
 
 int main(int argc, char **argv)
 {
-	int numOftasks, numOfworkers, taskid;
-
-	char myGrid[2][XDIMENSION][XDIMENSION];
+	int numOftasks, i, j, numOfworkers, taskid;
 	MPI_Comm cartesianComm, workersComm;
 
 	MPI_Init(&argc, &argv);								//Initialization
@@ -26,82 +25,120 @@ int main(int argc, char **argv)
 	MPI_Group_excl(initialGroup, 1, excludedRanks,&workersGroup);			//Exclude Master from new group
 	MPI_Comm_create(MPI_COMM_WORLD, workersGroup, &workersComm);			//Creating a new communicator for workers
 
-	int sqrtWorkers = (int)sqrt(numOfworkers);					//Distribute amount of work to workers
+	int sqrtWorkers = (int)sqrt(numOfworkers);					//Distribute amount of work to workers equally
 	int x = XDIMENSION/sqrtWorkers;							//An x*x subarray will be assigned to each task/worker
+	int subgrid_size = x*x*sizeof(char);
 
 
 
 	if(taskid == MASTER){				//MASTER CODE
 
 		validateInput(numOfworkers);
-	
-		printf("\nStarting the Game Of Life with %d worker tasks and 1 Master.\n", numOfworkers);
-		printf("Grid size: X=%d, Y=%d  Generations=%d\n\n\n", XDIMENSION, XDIMENSION, GENERATIONS);
 
+		printf("\nStarting the Game Of Life with %d worker tasks and 1 Master.\n", numOfworkers);
+		printf("Grid size: X=%d, Y=%d, Generations=%d\n\n\n", XDIMENSION, XDIMENSION, GENERATIONS);
+
+		MPI_Request *requests[2];
+		char ***subarraysInOrder[2];
+		char **subarrays[2];
+
+		//Initialize data structures
+		for(i=0; i<2; i++){
+			requests[i] = malloc(numOfworkers*sizeof(MPI_Request));
+			subarrays[i] = malloc(numOfworkers*sizeof(char*));
+			subarraysInOrder[i] = malloc(sqrtWorkers*sizeof(char**));
+			for(j=0; j<sqrtWorkers; j++)
+				subarraysInOrder[i][j] = malloc(sqrtWorkers*sizeof(char*));
+		}
+		
+		/********************************************************************************************************/
 		/****** GET TIME ******/
 		double time = MPI_Wtime();
+		//Receive initial and final subgrids from workers - subarrays will not be in order
+		for(i=0; i<2; i++){
+			for(j=0; j<numOfworkers; j++){
+				subarrays[i][j] = malloc(subgrid_size+2*sizeof(int));		//Allocate Space for 2 integers- worker sends his coordinates too
+				MPI_Irecv(subarrays[i][j], subgrid_size+2*sizeof(int), MPI_CHAR, j+1, i, MPI_COMM_WORLD, &requests[i][j]);		//Tags: 0 for initial, 1 for final
+			}
+		}
+		MPI_Waitall(numOfworkers, requests[0], MPI_STATUSES_IGNORE);
+		MPI_Waitall(numOfworkers, requests[1], MPI_STATUSES_IGNORE);
 
-		    /* Wait for results from all worker tasks */
-/*		for (i=0; i<numOftasks; i++)
-			MPI_Irecv(&myGrid[0][0][0], 1, myDatatype[i], i, DONE, cartesianComm, &requests[id]);
-*/
 		/****** GET TIME ******/
 		time = MPI_Wtime() - time;
+		/********************************************************************************************************/
 
-		/* Write final output, call X graph and finalize MPI */
-/*		printf("Finished after %f seconds\n", time);
-		printf("Writing final.dat file \n");
-		prtdat(XDIMENSION, *(myGrid+1), "final.dat");
-
-		//Free Memory
-		for (id=0; id<numOftasks; id++)
-			MPI_Type_free(&myDatatype[i]);
-
-		free(myDatatype);
-		free(requests);
-*/
+		//Map subarraysInOrder's elements to their correspondant subarrays 	--This is a way to have the subarrays 'sorted' in linear time
+		int coords[2]={0,0};
+		for(i=0; i<2; i++){
+			for(j=0; j<numOfworkers; j++){		
+				memcpy(&coords[0], &subarrays[i][j][subgrid_size], sizeof(int));
+				memcpy(&coords[1], &subarrays[i][j][subgrid_size+sizeof(int)], sizeof(int));
+				subarraysInOrder[i][coords[0]][coords[1]] = subarrays[i][j];
+			}
+		}
+		
+		printf("Finished after %f seconds\n\n", time);
+		
+		//Writing initial grid
+		printf("Writing initial.txt file.. \n");
+		printData(x, sqrtWorkers, subarraysInOrder[0], "initial.txt");
+		
+		//Writing final grid
+		printf("Writing final.txt file.. \n\n");
+		printData(x, sqrtWorkers, subarraysInOrder[1], "final.txt");
+		
+		
+		
+		//free(requests);
 	}
 
 	else {						//WORKER CODE
-		
-		srand(time(NULL));
 
-		int cartid, reorder=1, i, j, id, myCoords[2], dims[2], periodic[2];
+		int cartid, reorder=1, seed, id, myCoords[2], dims[2], periodic[2];
+		MPI_Request request[2];
+
 		dims[0] = dims[1] = sqrtWorkers;
 		periodic[0] = periodic[1] = 1;							//Periodic Table - each cell has 8 neighbors
 		MPI_Cart_create(workersComm, 2, dims, periodic, reorder, &cartesianComm);	//Make a new communicator with Cartesian Topology
+		MPI_Comm_rank(cartesianComm, &cartid);						//Get new taskid of current process -- (tasks may have been reordered)
+		MPI_Cart_coords(cartesianComm, cartid, 2, myCoords);
 
-		/*
-		MPI_Comm_rank(cartesianComm, &id);
-			MPI_Cart_coords(cartesianComm, id, 2, myCoords);
-			printf("old Rank %d coordinates are %d %d - ", taskid, myCoords[0], myCoords[1]);
-		MPI_Cart_rank(cartesianComm, myCoords, &id);
-		printf("new rank is %d\n", id);
-		fflush(stdout);
-		*/
+		seed = time(NULL)+cartid;
+		srand(seed);
 
-		//Each worker initializes its own subgrid randomly
+		/********************************************************************************************************/
+		//Allocate space for two subgrids, the initial and the temporary one.
+		//At the end of each grid we store the task's coords in order to send them to Master along with the main subgrid
+		char **myGrids = malloc(2*sizeof(char*));		
+		for(i=0; i<2; i++){
+			myGrids[i] = malloc(subgrid_size + 2*sizeof(int));
+			memcpy(&myGrids[i][subgrid_size], &myCoords[0], sizeof(int));
+			memcpy(&myGrids[i][subgrid_size+sizeof(int)], &myCoords[1], sizeof(int));
+		}
 
-		char **myGrids = malloc(2*sizeof(char*));
-		for(i=0; i<2; i++)
-			myGrids[i] = malloc(x*x*sizeof(char));	
-
+		//Each worker initializes his own subgrid randomly
 		for(i=0; i<x*x; i++)
 			myGrids[0][i] = (rand()%2 == 0)?DEAD:ALIVE;
 
+		//Must send the initial grid to Master along with tha task's coordinates
+		MPI_Isend(myGrids[0], subgrid_size+2*sizeof(int), MPI_CHAR, MASTER, INITIAL, MPI_COMM_WORLD, &request[0]);
+
+		
+		/********************************************************************************************************/
+		//Get Neighbors
 		Neighborhood neighbors;
 
 		//Get North, South, West, East neighbors' ids
 		MPI_Cart_shift(cartesianComm, 0, 1, &neighbors.north, &neighbors.south);	//Get North and South "ids"
 		MPI_Cart_shift(cartesianComm, 1, 1, &neighbors.west, &neighbors.east);		//Get West and East "ids"
 
-		MPI_Comm_rank(cartesianComm, &cartid);						//Get new taskid of current process -- (tasks may have been reordered)
-		MPI_Cart_coords(cartesianComm, cartid, 2, myCoords);
-
 		//Get northWest, northEast, southWest, southEast neighbors' ids
-		getRestNeighbors(cartesianComm, myCoords, sqrtWorkers, &neighbors);	
+		getRestNeighbors(cartesianComm, myCoords, sqrtWorkers, &neighbors);
 
-		//Datatypes
+		/********************************************************************************************************/
+		
+		//Create Datatypes
 		MPI_Datatype leftCol, rightCol;
 		int array_start[2];
 		int array_sizes[] = {x, x};
@@ -140,7 +177,7 @@ int main(int argc, char **argv)
 		buffer.east = malloc(x*sizeof(char));
 		buffer.west = malloc(x*sizeof(char));
 
-		MPI_Request *receiveRequests = malloc(8*sizeof(MPI_Request));	
+		MPI_Request *receiveRequests = malloc(8*sizeof(MPI_Request));
 
 		//Create persistent receive requests
 		MPI_Recv_init(buffer.west, x, MPI_CHAR, neighbors.west, TAG, cartesianComm, &receiveRequests[0]);			//Receive Left Column
@@ -154,12 +191,14 @@ int main(int argc, char **argv)
 		MPI_Recv_init(&buffer.southeast, 1, MPI_CHAR, neighbors.southeast, TAG, cartesianComm, &receiveRequests[6]);		//Receive southWest
 		MPI_Recv_init(&buffer.southwest, 1, MPI_CHAR, neighbors.southwest, TAG, cartesianComm, &receiveRequests[7]);		//Receive southEast
 
+
+		/********************************************************************************************************/
 		int round=0;
 		MPI_Status *statuses = malloc(8*sizeof(MPI_Status));
 
 		for(i=0; i<GENERATIONS; i++){
 			round = i%2;
-			
+
 			for (j=0; j<8; j++) {
 				MPI_Start(sendRequests[round]+j);		//Trigger send requests
 				MPI_Start(receiveRequests + j);			//Trigger receive requests
@@ -167,23 +206,23 @@ int main(int argc, char **argv)
 
 			nextGenerationInsideCells(myGrids[round], myGrids[round+1], x);
 
-			for(j=0; j<8; j++)
-				MPI_Wait(receiveRequests+j, &statuses[j]);
-			//MPI_Waitall(8, sendRequests[round], MPI_STATUSES_IGNORE);
-		
+			MPI_Waitall(8, receiveRequests, MPI_STATUSES_IGNORE);
+			//for(j=0; j<8; j++)	MPI_Wait(receiveRequests+j, &statuses[j]);
+
 			nextGenerationOutsideCells(myGrids[round], myGrids[round+1], x);
     		}
 
+    		/********************************************************************************************************/
+
+		//Must send the final grid to MASTER
+		MPI_Isend(myGrids[round+1], subgrid_size+2*sizeof(int), MPI_CHAR, MASTER, FINAL, MPI_COMM_WORLD, &request[1]);
 /*
-		for(i=0; i<2; i++) 
+		for(i=0; i<2; i++)
  			MPI_Request_free(requests[i]);
 */
 		MPI_Comm_free(&cartesianComm);
 
 	}
-
-//MPI_Isend(&myGrid[0][0][0], 1, myDatatype[id], id, BEGIN, cartesianComm, NULL);								//Non blocking SEND
-
 
 	MPI_Finalize();
 

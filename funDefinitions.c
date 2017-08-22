@@ -159,8 +159,9 @@ void nextGenerationInsideCells(char *fromGrid, char *toGrid, int x){
 		#define ALIVE		't'
 		#define DEAD 		'f'
 
+	/*	EYAGGELIA */
 
-*/	int i,j;
+	int i,j;
 
 	for(i=1; i<x-1; i++){
 		for(j=1; j<x-1; j++){
@@ -182,20 +183,24 @@ void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x){
 /**************************************************************************
 	.printData
 **************************************************************************/
-void printData(int nx, int ny, float *u1, char *fnam) {
-/*	int ix, iy;
+void printData(int x, int sqrtWorkers, char ***subarraysptr, char* fnam) {
+
 	FILE *fp;
+	int i, j, z, subline;
+	char *subarray;
 
 	fp = fopen(fnam, "w");
-	for (iy = ny-1; iy >= 0; iy--) {
-	for (ix = 0; ix <= nx-1; ix++) {
-	fprintf(fp, "%6.1f", *(u1+ix*ny+iy));
-	if (ix != nx-1) 
-	  fprintf(fp, " ");
-	else
-	  fprintf(fp, "\n");
-	}
+
+	for(i=0; i<sqrtWorkers; i++){					//subarray of task (i,j)
+		for(subline=0; subline<x; subline++){		//subline line of subarray
+			for(j=0; j<sqrtWorkers; j++){
+				subarray = subarraysptr[i][j];
+				for(z=0; z<x; z++){
+					fprintf(fp, "%c ", subarray[subline*x+z]);	
+				}
+			}		
+			fprintf(fp, "\n");
+		}
 	}
 	fclose(fp);
-*/
 }

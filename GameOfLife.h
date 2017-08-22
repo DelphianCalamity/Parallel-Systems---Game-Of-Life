@@ -7,9 +7,9 @@
 #define GENERATIONS 1	                	//number of generations
 #define MAXWORKER   50                  	//maximum number of worker tasks
 #define MINWORKER   1                  		//minimum number of worker tasks
-#define BEGIN       1
+#define INITIAL     0
+#define FINAL     	1
 #define TAG       	2
-#define DONE        4
 #define MASTER      0
 #define ALIVE		't'
 #define DEAD 		'f'
@@ -37,10 +37,10 @@ typedef struct {
 	char southwest;
 } ReceiveBuffer;
 
-void prtdat();
+void validateInput(int numOfworkers);
+void printData(int x, int sqrtWorkers, char ***subarraysptr, char* fnam);
 void nextGenerationInsideCells(char *fromGrid, char *toGrid, int x);
 void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x);
-void validateInput(int numOfworkers);
 void getRestNeighbors(MPI_Comm cartesianComm, int *myCoords, int sqrtWorkers, Neighborhood *neighbors);
 
 #endif

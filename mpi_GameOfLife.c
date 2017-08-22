@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 		//Receive initial and final subgrids from workers - subarrays will not be in order
 		for(i=0; i<2; i++){
 			for(j=0; j<numOfworkers; j++){
-				subarrays[i][j] = malloc(subgrid_size+2*sizeof(int));		//Allocate Space for 2 integers- worker sends his coordinates too
+				subarrays[i][j] = malloc(subgrid_size+2*sizeof(int));		//Allocate Space for 2 integers too- worker sends his coordinates too along with his subgrid
 				MPI_Irecv(subarrays[i][j], subgrid_size+2*sizeof(int), MPI_CHAR, j+1, i, MPI_COMM_WORLD, &requests[i][j]);		//Tags: 0 for initial, 1 for final
 			}
 		}
@@ -88,9 +88,15 @@ int main(int argc, char **argv)
 		printf("Writing final.txt file.. \n\n");
 		printData(x, sqrtWorkers, subarraysInOrder[1], "final.txt");
 		
+		//Free Allocated Space
+		for(i=0; i<2; i++){
+			free(requests[i]);
+			for(j=0; j<sqrtWorkers; j++)
+				free(subarraysInOrder[i][j]);
+			free(subarraysInOrder[i]);
+			free(subarrays[i]);
 		
-		
-		//free(requests);
+		}
 	}
 
 	else {						//WORKER CODE
@@ -154,7 +160,7 @@ int main(int argc, char **argv)
 		MPI_Type_create_subarray(2, array_sizes, array_subsizes, array_start, MPI_ORDER_C, MPI_CHAR, &rightCol);
 		MPI_Type_commit(&rightCol);
 
-		MPI_Request **sendRequests = malloc(2*sizeof(MPI_Request*));
+		MPI_Request *sendRequests[2];
 		for(i=0; i<2; i++){
 			sendRequests[i] = malloc(8*sizeof(MPI_Request));
 
@@ -209,19 +215,36 @@ int main(int argc, char **argv)
 			MPI_Waitall(8, receiveRequests, MPI_STATUSES_IGNORE);
 			//for(j=0; j<8; j++)	MPI_Wait(receiveRequests+j, &statuses[j]);
 
-			nextGenerationOutsideCells(myGrids[round], myGrids[round+1], x);
+			nextGenerationOutsideCells(myGrids[round], myGrids[round+1], x, buffer);
     		}
 
     		/********************************************************************************************************/
 
 		//Must send the final grid to MASTER
 		MPI_Isend(myGrids[round+1], subgrid_size+2*sizeof(int), MPI_CHAR, MASTER, FINAL, MPI_COMM_WORLD, &request[1]);
-/*
-		for(i=0; i<2; i++)
- 			MPI_Request_free(requests[i]);
-*/
-		MPI_Comm_free(&cartesianComm);
 
+    		/********************************************************************************************************/
+    		//Free Allocated Space
+		MPI_Request_free(&request[0]);
+		MPI_Request_free(&request[1]);
+
+		MPI_Type_free(&leftCol);
+		MPI_Type_free(&rightCol);
+		
+		for(i=0; i<2; i++){
+			free(myGrids[i]);
+			free(sendRequests[i]);
+		}
+
+		free(buffer.north);
+		free(buffer.south);
+		free(buffer.east);
+		free(buffer.west);
+
+		free(myGrids);
+		free(receiveRequests);
+		free(statuses);
+		MPI_Comm_free(&cartesianComm);
 	}
 
 	MPI_Finalize();

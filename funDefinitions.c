@@ -174,8 +174,10 @@ void nextGenerationInsideCells(char *fromGrid, char *toGrid, int x){
 /**************************************************************************
 	.nextGenerationOutsideCells
 ****************************************************************************/
-void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x){
+void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x,  ReceiveBuffer neighbors){
 
+
+	//here fill the grid's outside cells (perimeter) with the help of it's received neighbors
 	/*	EYAGGELIA */
 }
 

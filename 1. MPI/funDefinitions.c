@@ -204,15 +204,15 @@ void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x,  ReceiveBuf
 				else if(i==0 && j!=x-1) {
 					if(neighbors.north[j+1]==ALIVE)		aliveCounter++;
 				}
-				else if(i==x-1 && j==x-1) {
-					if(neighbors.east[i+1]==ALIVE)		aliveCounter++;
+				else if(i!=0 && j==x-1) {
+					if(neighbors.east[i-1]==ALIVE)		aliveCounter++;
 				}
 				else {
 					if(fromGrid[(i-1)*x+(j+1)]==ALIVE)	aliveCounter++;
 				}
 
 				// southeast neighbor
-				if(i==0 && j==x-1) {
+				if(i!=x-1 && j==x-1) {
 					if(neighbors.east[i+1]==ALIVE)		aliveCounter++;
 				}
 				else if(i==x-1 && j==x-1) {
@@ -226,8 +226,8 @@ void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x,  ReceiveBuf
 				}
 
 				// southwest neighbor
-				if(i==0 && j==0) {
-					if(neighbors.west[i-1]==ALIVE)		aliveCounter++;
+				if(i!=x-1 && j==0) {
+					if(neighbors.west[i+1]==ALIVE)		aliveCounter++;
 				}
 				else if(i==x-1 && j==0) {
 					if(neighbors.southwest==ALIVE)		aliveCounter++;
@@ -246,8 +246,8 @@ void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x,  ReceiveBuf
 				else if(i==0 && j!=0) {
 					if(neighbors.north[j-1]==ALIVE)		aliveCounter++;
 				}
-				else if(i==x-1 && j==0) {
-					if(neighbors.east[i-1]==ALIVE)		aliveCounter++;
+				else if(i!=0 && j==0) {
+					if(neighbors.west[i-1]==ALIVE)		aliveCounter++;
 				}
 				else {
 					if(fromGrid[(i-1)*x+(j-1)]==ALIVE)	aliveCounter++;

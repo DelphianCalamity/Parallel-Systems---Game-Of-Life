@@ -128,60 +128,31 @@ void getRestNeighbors(MPI_Comm cartesianComm, int *myCoords, int sqrtWorkers, Ne
 ****************************************************************************/
 void nextGenerationInsideCells(char *fromGrid, char *toGrid, int x){
 
-	/*Determine which of the cells from fromGrid array survive and which don't  according to the 
-	 game of life rules. The image of the new generation will be stored in toGrid array
-
-	 Important: function is called "InsideCells" cause you will determine the state of all the cells 
-	 except those in the 'perimeter'. those cells need to receive the state of their neighbors from 
-	 other processes. we ll determine the state of those cells in the function below (outsideCells) later
-	*/
-
-
-/*
-	fromGrid and toGrid are two 2-dimensional arrays represented as 1-dimensional arrays.
-	only way to pass a 2-dim array as an argument to a function and being able to manipulate it
-	with the usual convenient way: array[i][j] is when you define that array with mallocs.
-
-	char **array = malloc(..);
-	for(i=0; i<X; i++)
-		array[i] = malloc(..);
-
-	... but that way the array won't be in continuous cells in memory and that will be a problem
-		when creating the column subarray datatype (in mpi_GameOfLife.c).
-
-	so the fromGrid,toGrid arrays must be considered as 2-dimensional
-	and unfortunately must be manipulated with the non convenient way. 
-
-	so when you want to access the element in position (2,3) you must 
-	refer to it as : 2*x + 3*x  where x is the X and Y dimension-size (matrix is square).
-
-	*/
-
 	int i, j, k, aliveCounter=0;
 
 	for(i=1; i<x-1; i++) {
 		for(j=1; j<x-1; j++) {
-			if(fromGrid[(i-1)*x+j*x]==ALIVE)        aliveCounter++;         // north neighbor
-			if(fromGrid[i*x+(j+1)*x]==ALIVE)        aliveCounter++;         // east neighbor
-			if(fromGrid[(i+1)*x+j*x]==ALIVE)        aliveCounter++;         // south neighbor
-			if(fromGrid[i*x+(j-1)*x]==ALIVE)        aliveCounter++;         // west neighbor
-			if(fromGrid[(i-1)*x+(j+1)*x]==ALIVE)    aliveCounter++;         // northeast neighbor
-			if(fromGrid[(i+1)*x+(j+1)*x]==ALIVE)    aliveCounter++;         // southeast neighbor
-			if(fromGrid[(i+1)*x+(j-1)*x]==ALIVE)    aliveCounter++;         // southwest neighbor
-			if(fromGrid[(i-1)*x+(j-1)*x]==ALIVE)    aliveCounter++;         // northwest neighbor
-			if(fromGrid[i*x+j*x]==ALIVE) {
-				if(aliveCounter==2 || aliveCounter==3)          toGrid[i*x+j*x]=ALIVE;
-				else            toGrid[i*x+j*x]=DEAD;
+			if(fromGrid[(i-1)*x+j]==ALIVE)        aliveCounter++;         // north neighbor
+			if(fromGrid[i*x+(j+1)]==ALIVE)        aliveCounter++;         // east neighbor
+			if(fromGrid[(i+1)*x+j]==ALIVE)        aliveCounter++;         // south neighbor
+			if(fromGrid[i*x+(j-1)]==ALIVE)        aliveCounter++;         // west neighbor
+			if(fromGrid[(i-1)*x+(j+1)]==ALIVE)    aliveCounter++;         // northeast neighbor
+			if(fromGrid[(i+1)*x+(j+1)]==ALIVE)    aliveCounter++;         // southeast neighbor
+			if(fromGrid[(i+1)*x+(j-1)]==ALIVE)    aliveCounter++;         // southwest neighbor
+			if(fromGrid[(i-1)*x+(j-1)]==ALIVE)    aliveCounter++;         // northwest neighbor
+			if(fromGrid[i*x+j]==ALIVE) {
+				if(aliveCounter==2 || aliveCounter==3)          toGrid[i*x+j]=ALIVE;
+				else            toGrid[i*x+j]=DEAD;
 			}
 			else {
-				if(aliveCounter==3)             toGrid[i*x+j*x]=ALIVE;
-				else            toGrid[i*x+j*x]=DEAD;
+				if(aliveCounter==3)             toGrid[i*x+j]=ALIVE;
+				else            toGrid[i*x+j]=DEAD;
 			}
 			aliveCounter=0;
 		}
 	}
-
 }
+
 
 
 /**************************************************************************
@@ -192,14 +163,14 @@ void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x,  ReceiveBuf
 
 	for(i=0; i<x; i++) {
 		for(j=0; j<x; j++) {
-			if(i==0 || i==x-2 || j==0 || j==x-1) {
+			if(i==0 || i==x-1 || j==0 || j==x-1) {
 
 			// north neighbor
 			if(i-1<0) {
 				if(neighbors.north[j]==ALIVE)                           aliveCounter++;
 			}
 			else {
-				if(fromGrid[(i-1)*x+j*x]==ALIVE)                        aliveCounter++;
+				if(fromGrid[(i-1)*x+j]==ALIVE)                  aliveCounter++;
 			}
 
 			// east neighbor
@@ -207,15 +178,15 @@ void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x,  ReceiveBuf
 				if(neighbors.east[i]==ALIVE)                            aliveCounter++;
 			}
 			else {
-				if(fromGrid[i*x+(j+1)*x]==ALIVE)                        aliveCounter++;
+				if(fromGrid[i*x+(j+1)]==ALIVE)                  aliveCounter++;
 			}
 
 			// south neighbor
-			if(i+1>=x-1) {
+			if(i+1>=x) {
 				if(neighbors.south[j]==ALIVE)                           aliveCounter++;
 			}
 			else {
-				if(fromGrid[(i+1)*x+j*x]==ALIVE)                        aliveCounter++;
+				if(fromGrid[(i+1)*x+j]==ALIVE)                  aliveCounter++;
 			}
 
 			// west neighbor
@@ -223,31 +194,31 @@ void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x,  ReceiveBuf
 				if(neighbors.west[i]==ALIVE)                            aliveCounter++;
 			}
 			else {
-				if(fromGrid[i*x+(j-1)*x]==ALIVE)                        aliveCounter++;
+				if(fromGrid[i*x+(j-1)]==ALIVE)                  aliveCounter++;
 			}
-
+			
 			// northeast neighbor
 			if(i-1<0 && j+1>=x) {
 				if(neighbors.northeast==ALIVE)                  aliveCounter++;
 			}
 			else {
-				if(fromGrid[(i-1)*x+(j+1)*x]==ALIVE)    aliveCounter++;
+				if(fromGrid[(i-1)*x+(j+1)]==ALIVE)      aliveCounter++;
 			}
 
 			// southeast neighbor
-			if(i+1>=x-1 && j+1>=x) {
+			if(i+1>=x && j+1>=x) {
 				if(neighbors.southeast==ALIVE)                  aliveCounter++;
 			}
 			else {
-				if(fromGrid[(i+1)*x+(j+1)*x]==ALIVE)    aliveCounter++;
+				if(fromGrid[(i+1)*x+(j+1)]==ALIVE)      aliveCounter++;
 			}
 
 			// southwest neighbor
-			if(i+1>=x-1 && j-1<0) {
+			if(i+1>=x && j-1<0) {
 				if(neighbors.southwest==ALIVE)                  aliveCounter++;
 			}
 			else {
-				if(fromGrid[(i+1)*x+(j-1)*x]==ALIVE)    aliveCounter++;
+				if(fromGrid[(i+1)*x+(j-1)]==ALIVE)      aliveCounter++;
 			}
 
 			// northwest neighbor
@@ -255,18 +226,18 @@ void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x,  ReceiveBuf
 				if(neighbors.northwest==ALIVE)                  aliveCounter++;
 			}
 			else {
-				if(fromGrid[(i-1)*x+(j-1)*x]==ALIVE)    aliveCounter++;
+				if(fromGrid[(i-1)*x+(j-1)]==ALIVE)      aliveCounter++;
 			}
 
-			if(fromGrid[i*x+j*x]==ALIVE) {
-				if(aliveCounter==2 || aliveCounter==3)          toGrid[i*x+j*x]=ALIVE;
-				else            toGrid[i*x+j*x]=DEAD;
-			}
-			else {
-				if(aliveCounter==3)             toGrid[i*x+j*x]=ALIVE;
-				else            toGrid[i*x+j*x]=DEAD;
-			}
-			aliveCounter=0;
+				if(fromGrid[i*x+j]==ALIVE) {
+					if(aliveCounter==2 || aliveCounter==3)          toGrid[i*x+j]=ALIVE;
+					else            toGrid[i*x+j]=DEAD;
+				}
+				else {
+					if(aliveCounter==3)             toGrid[i*x+j]=ALIVE;
+					else            toGrid[i*x+j]=DEAD;
+				}
+				aliveCounter=0;
 			}
 		}
 	}

@@ -165,77 +165,103 @@ void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x,  ReceiveBuf
 		for(j=0; j<x; j++) {
 			if(i==0 || i==x-1 || j==0 || j==x-1) {
 
-			// north neighbor
-			if(i-1<0) {
-				if(neighbors.north[j]==ALIVE)                           aliveCounter++;
-			}
-			else {
-				if(fromGrid[(i-1)*x+j]==ALIVE)                  aliveCounter++;
-			}
-
-			// east neighbor
-			if(j+1>=x) {
-				if(neighbors.east[i]==ALIVE)                            aliveCounter++;
-			}
-			else {
-				if(fromGrid[i*x+(j+1)]==ALIVE)                  aliveCounter++;
-			}
-
-			// south neighbor
-			if(i+1>=x) {
-				if(neighbors.south[j]==ALIVE)                           aliveCounter++;
-			}
-			else {
-				if(fromGrid[(i+1)*x+j]==ALIVE)                  aliveCounter++;
-			}
-
-			// west neighbor
-			if(j-1<0) {
-				if(neighbors.west[i]==ALIVE)                            aliveCounter++;
-			}
-			else {
-				if(fromGrid[i*x+(j-1)]==ALIVE)                  aliveCounter++;
-			}
-			
-			// northeast neighbor
-			if(i-1<0 && j+1>=x) {
-				if(neighbors.northeast==ALIVE)                  aliveCounter++;
-			}
-			else {
-				if(fromGrid[(i-1)*x+(j+1)]==ALIVE)      aliveCounter++;
-			}
-
-			// southeast neighbor
-			if(i+1>=x && j+1>=x) {
-				if(neighbors.southeast==ALIVE)                  aliveCounter++;
-			}
-			else {
-				if(fromGrid[(i+1)*x+(j+1)]==ALIVE)      aliveCounter++;
-			}
-
-			// southwest neighbor
-			if(i+1>=x && j-1<0) {
-				if(neighbors.southwest==ALIVE)                  aliveCounter++;
-			}
-			else {
-				if(fromGrid[(i+1)*x+(j-1)]==ALIVE)      aliveCounter++;
-			}
-
-			// northwest neighbor
-			if(i-1<0 && j-1<0) {
-				if(neighbors.northwest==ALIVE)                  aliveCounter++;
-			}
-			else {
-				if(fromGrid[(i-1)*x+(j-1)]==ALIVE)      aliveCounter++;
-			}
-
-				if(fromGrid[i*x+j]==ALIVE) {
-					if(aliveCounter==2 || aliveCounter==3)          toGrid[i*x+j]=ALIVE;
-					else            toGrid[i*x+j]=DEAD;
+				// north neighbor
+				if(i-1<0) {
+					if(neighbors.north[j]==ALIVE)			aliveCounter++;
 				}
 				else {
-					if(aliveCounter==3)             toGrid[i*x+j]=ALIVE;
-					else            toGrid[i*x+j]=DEAD;
+					if(fromGrid[(i-1)*x+j]==ALIVE)		aliveCounter++;
+				}
+
+				// east neighbor
+				if(j+1>=x) {
+					if(neighbors.east[i]==ALIVE)			aliveCounter++;
+				}
+				else {
+					if(fromGrid[i*x+(j+1)]==ALIVE)		aliveCounter++;
+				}
+
+				// south neighbor
+				if(i+1>=x) {
+					if(neighbors.south[j]==ALIVE)			aliveCounter++;
+				}
+				else {
+					if(fromGrid[(i+1)*x+j]==ALIVE)		aliveCounter++;
+				}
+
+				// west neighbor
+				if(j-1<0) {
+					if(neighbors.west[i]==ALIVE)			aliveCounter++;
+				}
+				else {
+					if(fromGrid[i*x+(j-1)]==ALIVE)		aliveCounter++;
+				}
+			
+				// northeast neighbor
+				if(i==0 && j==x-1) {
+					if(neighbors.northeast==ALIVE)		aliveCounter++;
+				}
+				else if(i==0 && j!=x-1) {
+					if(neighbors.north[j+1]==ALIVE)		aliveCounter++;
+				}
+				else if(i==x-1 && j==x-1) {
+					if(neighbors.east[i+1]==ALIVE)		aliveCounter++;
+				}
+				else {
+					if(fromGrid[(i-1)*x+(j+1)]==ALIVE)	aliveCounter++;
+				}
+
+				// southeast neighbor
+				if(i==0 && j==x-1) {
+					if(neighbors.east[i+1]==ALIVE)		aliveCounter++;
+				}
+				else if(i==x-1 && j==x-1) {
+					if(neighbors.southeast==ALIVE)		aliveCounter++;
+				}
+				else if(i==x-1 && j!=x-1) {
+					if(neighbors.south[j+1]==ALIVE)		aliveCounter++;
+				}
+				else {
+					if(fromGrid[(i+1)*x+(j+1)]==ALIVE)	aliveCounter++;
+				}
+
+				// southwest neighbor
+				if(i==0 && j==0) {
+					if(neighbors.west[i-1]==ALIVE)		aliveCounter++;
+				}
+				else if(i==x-1 && j==0) {
+					if(neighbors.southwest==ALIVE)		aliveCounter++;
+				}
+				else if(i==x-1 && j!=0) {
+					if(neighbors.south[j-1]==ALIVE)		aliveCounter++;
+				}
+				else {
+					if(fromGrid[(i+1)*x+(j-1)]==ALIVE)	aliveCounter++;
+				}
+
+				// northwest neighbor
+				if(i==0 && j==0) {
+					if(neighbors.northwest==ALIVE)		aliveCounter++;
+				}
+				else if(i==0 && j!=0) {
+					if(neighbors.north[j-1]==ALIVE)		aliveCounter++;
+				}
+				else if(i==x-1 && j==0) {
+					if(neighbors.east[i-1]==ALIVE)		aliveCounter++;
+				}
+				else {
+					if(fromGrid[(i-1)*x+(j-1)]==ALIVE)	aliveCounter++;
+				}
+
+
+				// Check if it will be alive or dead at next generation
+				if(fromGrid[i*x+j]==ALIVE) {
+					if(aliveCounter==2 || aliveCounter==3)		toGrid[i*x+j]=ALIVE;
+					else		toGrid[i*x+j]=DEAD;
+				}
+				else {
+					if(aliveCounter==3)		toGrid[i*x+j]=ALIVE;
+					else		toGrid[i*x+j]=DEAD;
 				}
 				aliveCounter=0;
 			}

@@ -31,95 +31,30 @@ void validateInput(int numOfWorkers){
 
 void getRestNeighbors(MPI_Comm cartesianComm, int *myCoords, int sqrtWorkers, Neighborhood *neighbors){
 
-	int temp[2], rank;
+	int temp[2], rank, east;
 	int x = myCoords[0], y = myCoords[1];
+	
+	temp[0] = (x!=0) ? x-1 : sqrtWorkers-1;
+	
+	temp[1] = (y!=sqrtWorkers-1) ? y+1 : 0;						//NorthEast
+	east = temp[1];
+	MPI_Cart_rank(cartesianComm, temp, &rank);
+	neighbors->northeast = rank;
+						
+	temp[1] = (y!=0) ? y-1 : sqrtWorkers-1;						//NorthWest
+	MPI_Cart_rank(cartesianComm, temp, &rank);
+	neighbors->northwest = rank;
 
-	if(y != sqrtWorkers-1 && x != 0){						//NorthEast
-		temp[0] = x-1; temp[1] = y+1;
-		MPI_Cart_rank(cartesianComm, temp, &rank);
-		neighbors->northeast = rank;
-	}
-	else if(x==0 && y!=sqrtWorkers-1){
-		temp[0] = sqrtWorkers-1; temp[1] = y+1;
-		MPI_Cart_rank(cartesianComm, temp, &rank);
-		neighbors->northeast = rank;
-	}
-	else if(x!=0 && y==sqrtWorkers-1){
-		temp[0] = x-1; temp[1] = 0;
-		MPI_Cart_rank(cartesianComm, temp, &rank);
-		neighbors->northeast = rank;
-	}
-	else{
-		temp[0] = sqrtWorkers-1; temp[1] = 0;
-		MPI_Cart_rank(cartesianComm, temp, &rank);
-		neighbors->northeast = rank;
-	}
+/*************************************************/
 
-/************************************************/
-	if(y!=0 && x!=0){										//NorthWest
-		temp[0] = x-1; temp[1] = y-1;
-		MPI_Cart_rank(cartesianComm, temp, &rank);
-		neighbors->northwest = rank;
-	}
-	else if(y!=0 && x==0){
-		temp[0] = sqrtWorkers-1; temp[1] = y-1;
-		MPI_Cart_rank(cartesianComm, temp, &rank);
-		neighbors->northwest = rank;
-	}
-	else if(y==0 && x!=0){
-		temp[0] = x-1; temp[1] = sqrtWorkers-1;
-		MPI_Cart_rank(cartesianComm, temp, &rank);
-		neighbors->northwest = rank;
-	}
-	else{
-		temp[0] = sqrtWorkers-1; temp[1] = sqrtWorkers-1;
-		MPI_Cart_rank(cartesianComm, temp, &rank);
-		neighbors->northwest = rank;
-	}
+	temp[0] = (x!=sqrtWorkers-1) ? x+1 : 0;
 
-/************************************************/			//SouthWest
-	if(y!=0 && x!=sqrtWorkers-1){
-		temp[0] = x+1; temp[1] = y-1;
-		MPI_Cart_rank(cartesianComm, temp, &rank);
-		neighbors->southwest = rank;
-	}
-	else if(y!=0 && x==sqrtWorkers-1){
-		temp[0] = 0; temp[1] = y-1;
-		MPI_Cart_rank(cartesianComm, temp, &rank);
-		neighbors->southwest = rank;
-	}
-	else if(y==0 && x!=sqrtWorkers-1){
-		temp[0] = x+1; temp[1] = sqrtWorkers-1;
-		MPI_Cart_rank(cartesianComm, temp, &rank);
-		neighbors->southwest = rank;
-	}
-	else {
-		temp[0] = 0; temp[1] = sqrtWorkers-1;
-		MPI_Cart_rank(cartesianComm, temp, &rank);
-		neighbors->southwest = rank;
-	}
+	MPI_Cart_rank(cartesianComm, temp, &rank);					//SouthWest
+	neighbors->southwest = rank;
 
-/************************************************/			//SouthEast
-	if(y!=sqrtWorkers-1 && x!=sqrtWorkers-1){
-		temp[0] = x+1; temp[1] = y+1;
-		MPI_Cart_rank(cartesianComm, temp, &rank);
-		neighbors->southeast = rank;
-	}
-	else if(y!=sqrtWorkers-1 && x==sqrtWorkers-1){
-		temp[0] = 0; temp[1] = y+1;
-		MPI_Cart_rank(cartesianComm, temp, &rank);
-		neighbors->southeast = rank;
-	}
-	else if(y==sqrtWorkers-1 && x!=sqrtWorkers-1){
-		temp[0] = x+1; temp[1] = 0;
-		MPI_Cart_rank(cartesianComm, temp, &rank);
-		neighbors->southeast = rank;
-	}
-	else{
-		temp[0] = 0; temp[1] = 0;
-		MPI_Cart_rank(cartesianComm, temp, &rank);
-		neighbors->southeast = rank;
-	}
+	temp[1] = east;												//SouthEast
+	MPI_Cart_rank(cartesianComm, temp, &rank);
+	neighbors->southeast = rank;
 }
 
 
@@ -152,7 +87,6 @@ void nextGenerationInsideCells(char *fromGrid, char *toGrid, int x){
 		}
 	}
 }
-
 
 
 /**************************************************************************

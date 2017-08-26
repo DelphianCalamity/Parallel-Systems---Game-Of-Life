@@ -13,6 +13,8 @@
 #define MASTER      	0
 #define ALIVE		't'
 #define DEAD 		'f'
+#define FREQUENCY 	5
+
 
 typedef struct {
 	int north;
@@ -42,5 +44,7 @@ void printData(int x, int sqrtWorkers, char ***subarraysptr, char* fnam);
 void nextGenerationInsideCells(char *fromGrid, char *toGrid, int x);
 void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x, ReceiveBuffer neighbors);
 void getRestNeighbors(MPI_Comm cartesianComm, int *myCoords, int sqrtWorkers, Neighborhood *neighbors);
+int isDifferent(char *fromGrid, char *toGrid, int x);
+
 
 #endif

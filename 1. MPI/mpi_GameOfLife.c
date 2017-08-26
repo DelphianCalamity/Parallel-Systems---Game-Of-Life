@@ -199,10 +199,10 @@ int main(int argc, char **argv)
 
 
 		/********************************************************************************************************/
-		int round=0;
+		int round=0, max;
 		MPI_Status *statuses = malloc(8*sizeof(MPI_Status));
 
-		for(i=0; i<GENERATIONS; i++){
+		for(i=0; i<GENERATIONS; i++) {
 			round = i%2;
 
 			for (j=0; j<8; j++) {
@@ -213,21 +213,41 @@ int main(int argc, char **argv)
 			nextGenerationInsideCells(myGrids[round], myGrids[round+1], x);
 
 			MPI_Waitall(8, receiveRequests, MPI_STATUSES_IGNORE);
+
 			//for(j=0; j<8; j++)	MPI_Wait(receiveRequests+j, &statuses[j]);
 
 			nextGenerationOutsideCells(myGrids[round], myGrids[round+1], x, buffer);
+
+			MPI_Waitall(8, sendRequests[0], MPI_STATUSES_IGNORE);
+			MPI_Waitall(8, sendRequests[1], MPI_STATUSES_IGNORE);
+
+			/**********************************************************************************************************/
+			//-- COMMENT the block if you don't want to perform checks
+
+			if (i % FREQUENCY == 0) {				//Perform Reduce Checks every FREQUENCY times	
+
+				max = isDifferent(myGrids[round], myGrids[round+1], x);
+				MPI_Allreduce(MPI_IN_PLACE, &max, 1, MPI_INT, MPI_MAX, cartesianComm);
+			
+				if (max == 0) {
+					printf("Stopping..\nEither cells are dead or generations remain the same\n");
+					break;
+				}
+			}
+
+			/**********************************************************************************************************/
     		}
 
-    		/********************************************************************************************************/
 
+    		/********************************************************************************************************/
 		//Must send the final grid to MASTER
 		MPI_Isend(myGrids[round+1], subgrid_size+2*sizeof(int), MPI_CHAR, MASTER, FINAL, MPI_COMM_WORLD, &request[1]);
 
     		/********************************************************************************************************/
-    		//Free Allocated Space
-		MPI_Request_free(&request[0]);
-		MPI_Request_free(&request[1]);
 
+    		MPI_Waitall(2, request, MPI_STATUSES_IGNORE);
+
+    		//Free Allocated Space
 		MPI_Type_free(&leftCol);
 		MPI_Type_free(&rightCol);
 		
@@ -245,6 +265,7 @@ int main(int argc, char **argv)
 		free(receiveRequests);
 		free(statuses);
 		MPI_Comm_free(&cartesianComm);
+
 	}
 
 	MPI_Finalize();

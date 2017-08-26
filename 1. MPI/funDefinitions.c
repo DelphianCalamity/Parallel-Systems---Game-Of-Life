@@ -204,6 +204,20 @@ void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x,  ReceiveBuf
 }
 
 
+/**************************************************************************
+	.isDifferent
+**************************************************************************/
+int isDifferent(char *fromGrid, char *toGrid, int x) {
+
+	int i;
+	for(i=0; i<x*x; i++){
+		if(fromGrid[i] != toGrid[i])
+			return 1;
+	}
+
+	return 0;
+}
+
 
 /**************************************************************************
 	.printData

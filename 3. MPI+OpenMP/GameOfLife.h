@@ -3,9 +3,9 @@
 
 #include "mpi.h"
 
-#define XDIMENSION	20						//We demand that the grid is square in order to simplify the problem, so only its one dimension needs to be defined
-#define GENERATIONS 	1	                	//number of generations
-#define MAXWORKER   	50                  	//maximum number of worker tasks
+#define XDIMENSION	576				//We demand that the grid is square in order to simplify the problem, so only its one dimension needs to be defined
+#define GENERATIONS 	100	                	//number of generations
+#define MAXWORKER   	50                  		//maximum number of worker tasks
 #define MINWORKER   	1                  		//minimum number of worker tasks
 #define INITIAL    	0
 #define FINAL     	1

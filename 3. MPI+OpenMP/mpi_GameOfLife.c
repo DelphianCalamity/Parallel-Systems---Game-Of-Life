@@ -13,7 +13,7 @@ int main(int argc, char **argv)
 	int numOftasks, i, j, numOfworkers, taskid;
 	MPI_Comm cartesianComm, workersComm;
 
-int mpi_support
+int mpi_support;
 	MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &mpi_support);								//Initialization
 	if(mpi_support != MPI_THREAD_MULTIPLE)
 		printf("MPI_THREAD_MULTIPLE thread support required\n");
@@ -214,23 +214,23 @@ int mpi_support
 				MPI_Start(receiveRequests + j);			//Trigger receive requests
 			}
 
-			nextGenerationInsideCells(myGrids[round], myGrids[round+1], x);
+			nextGenerationInsideCells(myGrids[round], myGrids[2-(round+1)], x);
 
 			MPI_Waitall(8, receiveRequests, MPI_STATUSES_IGNORE);
 
 			//for(j=0; j<8; j++)	MPI_Wait(receiveRequests+j, &statuses[j]);
 
-			nextGenerationOutsideCells(myGrids[round], myGrids[round+1], x, buffer);
+			nextGenerationOutsideCells(myGrids[round], myGrids2-(round+1)], x, buffer);
 
 			MPI_Waitall(8, sendRequests[0], MPI_STATUSES_IGNORE);
 			MPI_Waitall(8, sendRequests[1], MPI_STATUSES_IGNORE);
 
 			/**********************************************************************************************************/
 			//-- COMMENT the block if you don't want to perform checks
-
+/*
 			if (i % FREQUENCY == 0) {				//Perform Reduce Checks every FREQUENCY times	
 
-				max = isDifferent(myGrids[round], myGrids[round+1], x);
+				max = isDifferent(myGrids[round], myGrids[2-(round+1)], x);
 				MPI_Allreduce(MPI_IN_PLACE, &max, 1, MPI_INT, MPI_MAX, cartesianComm);
 			
 				if (max == 0) {
@@ -238,14 +238,14 @@ int mpi_support
 					break;
 				}
 			}
-
+*/
 			/**********************************************************************************************************/
     		}
 
 
     		/********************************************************************************************************/
 		//Must send the final grid to MASTER
-		MPI_Isend(myGrids[round+1], subgrid_size+2*sizeof(int), MPI_CHAR, MASTER, FINAL, MPI_COMM_WORLD, &request[1]);
+		MPI_Isend(myGrids[2-(round+1)], subgrid_size+2*sizeof(int), MPI_CHAR, MASTER, FINAL, MPI_COMM_WORLD, &request[1]);
 
     		/********************************************************************************************************/
 

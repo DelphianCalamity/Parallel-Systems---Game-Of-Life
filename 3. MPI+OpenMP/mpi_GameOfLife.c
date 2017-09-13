@@ -220,7 +220,7 @@ int mpi_support;
 
 			//for(j=0; j<8; j++)	MPI_Wait(receiveRequests+j, &statuses[j]);
 
-			nextGenerationOutsideCells(myGrids[round], myGrids2-(round+1)], x, buffer);
+			nextGenerationOutsideCells(myGrids[round], myGrids[2-(round+1)], x, buffer);
 
 			MPI_Waitall(8, sendRequests[0], MPI_STATUSES_IGNORE);
 			MPI_Waitall(8, sendRequests[1], MPI_STATUSES_IGNORE);

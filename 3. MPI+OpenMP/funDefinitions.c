@@ -65,6 +65,7 @@ void nextGenerationInsideCells(char *fromGrid, char *toGrid, int x){
 
 	int i, j, k, aliveCounter=0;
 
+	#pragma omp parallel for shared(fromGrid, toGrid) schedule(static, 1)
 	for(i=1; i<x-1; i++) {
 		for(j=1; j<x-1; j++) {
 			if(fromGrid[(i-1)*x+j]==ALIVE)        aliveCounter++;         // north neighbor

@@ -223,7 +223,7 @@ int main(int argc, char **argv)
 
 			/**********************************************************************************************************/
 			//-- COMMENT the block if you don't want to perform checks
-/*
+
 			if (i % FREQUENCY == 0) {				//Perform Reduce Checks every FREQUENCY times	
 
 				max = isDifferent(myGrids[round], myGrids[2-(round+1)], x);
@@ -234,7 +234,7 @@ int main(int argc, char **argv)
 					break;
 				}
 			}
-*/
+
 			/**********************************************************************************************************/
     		}
 

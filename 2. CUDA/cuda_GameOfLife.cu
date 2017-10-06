@@ -14,20 +14,15 @@
 
 int main (int argc, char **argv) {
 
-
 	/* for Broadcast */
 
 	int width = XDIMENSION;
-
 	int height = XDIMENSION;
-
 	int loops = GENERATIONS;
-	
 
-	/*Initialize arrays*/
+	/* Initialize arrays */
 
 	
-	// not sure (?))
 	ReceiveBuffer buffer;
 	buffer.north = malloc(x*sizeof(char));
 	buffer.south = malloc(x*sizeof(char));
@@ -62,11 +57,11 @@ int main (int argc, char **argv) {
 	cudaMalloc(&gpu_t1, width*height*sizeof(char));
 
 
-
 	int blocks = BLOCKS; 
 
 	
-	/*initialization of t array */   
+	/* Initialization of t array */
+   
 	for(i=0; i<x*x; i++)
 		t[i] = (rand()%2 == 0)?DEAD:ALIVE;
 
@@ -76,7 +71,7 @@ int main (int argc, char **argv) {
 
 
 
-	/* update the grid STEP times */
+	/* Update the grid STEP times */
 
 	for (timer = 0 ; timer < loops ; timer++){
 
@@ -105,11 +100,12 @@ int main (int argc, char **argv) {
 
 
 
-	//print final
+	/* Print final */
 	
 	printData();			// needs to be done
 	
-	//free allocated space
+	
+	/* Free allocated space */
 	
 	for(i = 0; i < width; i++){
 

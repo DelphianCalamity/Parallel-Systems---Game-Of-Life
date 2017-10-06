@@ -21,7 +21,6 @@ void validateInput(int numOfWorkers) {		// not touched yet
   	if ((numOfWorkers > MAXWORKER) || (numOfWorkers < MINWORKER) || sqrtWorkers*sqrtWorkers != numOfWorkers  || XDIMENSION%sqrtWorkers != 0) {
     	printf("\n\n ERROR: The number of tasks must be between %d and %d.\n 	number of WORKERS must be a square number whose square root is perfectly divided by %d.\n	Total #tasks must be #workers+1.\n", MINWORKER+1,MAXWORKER, XDIMENSION);
     	printf(" Quitting...\n\n");
-	    MPI_Abort(MPI_COMM_WORLD, 0);
 	    exit(1);
     }
 }

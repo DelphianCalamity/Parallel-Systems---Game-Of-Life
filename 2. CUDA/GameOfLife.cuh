@@ -16,35 +16,9 @@
 #define BLOCKS 16
 
 
-typedef struct {
-	int north;
-	int south;
-	int west;
-	int east;
-	int northeast;
-	int northwest;
-	int southeast;
-	int southwest;
-} Neighborhood;
-
-
-typedef struct {
-	char *north;
-	char *south;
-	char *west;
-	char *east;
-	char northeast;
-	char northwest;
-	char southeast;
-	char southwest;
-} ReceiveBuffer;
-
-void validateInput(int numOfworkers);
-void printData(int x, int sqrtWorkers, char ***subarraysptr, char* fnam);
-void nextGenerationInsideCells(char *fromGrid, char *toGrid, int x);
-void nextGenerationOutsideCells(char *fromGrid, char *toGrid, int x, ReceiveBuffer neighbors);
-void getRestNeighbors(MPI_Comm cartesianComm, int *myCoords, int sqrtWorkers, Neighborhood *neighbors);
-int isDifferent(char *fromGrid, char *toGrid, int x);
+void printData(int height, int width, char *t, char* fnam);
+void nextGenerationCells(char *t, char *t1, int height, int width);
+int isDifferent(char *t, char *t1, int height, int width);
 
 
 #endif
